@@ -40,6 +40,7 @@ func init() {
 	prCmd.AddCommand(prReactionsCmd())
 	prCmd.AddCommand(prReactCmd())
 	prCmd.AddCommand(prCheckoutCmd())
+	prCmd.AddCommand(prChecksCmd())
 }
 
 func prViewCmd() *cobra.Command {
