@@ -313,9 +313,14 @@ func releaseDeleteCmd() *cobra.Command {
 }
 
 // uploadTagAndFile resolves the release tag and file for "release upload". The tag comes from --tag with the file as
-// the only argument, or from the first of two positional arguments.
-func uploadTagAndFile(flagTag string, args []string) (tag, file string, err error) {
-	if flagTag != "" {
+// the only argument, or from the first of two positional arguments. tagChanged must be
+// cmd.Flags().Changed("tag"): an explicitly empty --tag is an error, not an unset flag, so an
+// unset script variable cannot silently select positional mode.
+func uploadTagAndFile(flagTag string, tagChanged bool, args []string) (tag, file string, err error) {
+	if tagChanged {
+		if flagTag == "" {
+			return "", "", fmt.Errorf("--tag value must not be empty")
+		}
 		if len(args) != 1 {
 			return "", "", fmt.Errorf("with --tag, expected one <file> argument, got %d", len(args))
 		}
@@ -334,11 +339,11 @@ func releaseUploadCmd() *cobra.Command {
 		Use:   "upload (<tag> <file> | --tag <tag> <file>)",
 		Short: "Upload an asset to a release",
 		Args: func(cmd *cobra.Command, args []string) error {
-			_, _, err := uploadTagAndFile(flagTag, args)
+			_, _, err := uploadTagAndFile(flagTag, cmd.Flags().Changed("tag"), args)
 			return err
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			tag, filePath, err := uploadTagAndFile(flagTag, args)
+			tag, filePath, err := uploadTagAndFile(flagTag, cmd.Flags().Changed("tag"), args)
 			if err != nil {
 				return err
 			}
