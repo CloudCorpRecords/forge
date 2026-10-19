@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 
 	"github.com/google/go-github/v82/github"
 )
@@ -231,7 +232,11 @@ func (s *gitHubReleaseService) UploadAsset(ctx context.Context, owner, repo, tag
 		return nil, err
 	}
 
-	a, resp, err := s.client.Repositories.UploadReleaseAsset(ctx, owner, repo, existing.GetID(), nil, file)
+	// UploadReleaseAsset dereferences opts (opts.MediaType), so a nil options
+	// value panics inside go-github. Name the asset after the file like the
+	// gitea service does.
+	opts := &github.UploadOptions{Name: filepath.Base(file.Name())}
+	a, resp, err := s.client.Repositories.UploadReleaseAsset(ctx, owner, repo, existing.GetID(), opts, file)
 	if err != nil {
 		if resp != nil && resp.StatusCode == http.StatusNotFound {
 			return nil, forge.ErrNotFound

@@ -4,8 +4,11 @@ import (
 	"context"
 	"fmt"
 	forge "github.com/git-pkgs/forge"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/google/go-github/v82/github"
@@ -184,4 +187,42 @@ func TestGitHubReleaseDelete(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
+}
+
+func TestGitHubReleaseUploadAsset(t *testing.T) {
+	var gotName string
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /api/v3/repos/octocat/hello/releases/tags/v1.0.0", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = fmt.Fprint(w, `{"id": 1, "tag_name": "v1.0.0"}`)
+	})
+	mux.HandleFunc("POST /api/v3/api/uploads/repos/octocat/hello/releases/1/assets", func(w http.ResponseWriter, r *http.Request) {
+		gotName = r.URL.Query().Get("name")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated)
+		_, _ = fmt.Fprintf(w, `{"id": 2, "name": %q, "size": 4, "download_count": 0, "browser_download_url": "https://example.com/dl"}`, gotName)
+	})
+
+	srv := httptest.NewServer(mux)
+	defer srv.Close()
+
+	f, err := os.CreateTemp(t.TempDir(), "upload-*.tar.gz")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	defer func() { _ = f.Close() }()
+	if _, err := f.WriteString("data"); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if _, err := f.Seek(0, io.SeekStart); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	svc := newTestGitHubReleaseService(srv)
+	a, err := svc.UploadAsset(context.Background(), "octocat", "hello", "v1.0.0", f)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	assertEqual(t, "asset name sent", filepath.Base(f.Name()), gotName)
+	assertEqual(t, "Name", filepath.Base(f.Name()), a.Name)
 }
