@@ -715,6 +715,10 @@ func (m *mockForge) DeployKeys() DeployKeyService {
 	return &mockDeployKeyService{}
 }
 
+func (m *mockForge) Webhooks() WebhookService {
+	return &mockWebhookService{}
+}
+
 func (m *mockForge) Secrets() SecretService {
 	if m.secretService != nil {
 		return m.secretService
@@ -793,6 +797,24 @@ func (m *mockCollaboratorService) Add(_ context.Context, _, _, _ string, _ AddCo
 }
 
 func (m *mockCollaboratorService) Remove(_ context.Context, _, _, _ string) error {
+	return nil
+}
+
+type mockWebhookService struct{}
+
+func (m *mockWebhookService) List(_ context.Context, _, _ string, _ ListWebhookOpts) ([]Webhook, error) {
+	return nil, nil
+}
+
+func (m *mockWebhookService) Get(_ context.Context, _, _ string, _ int64) (*Webhook, error) {
+	return nil, nil
+}
+
+func (m *mockWebhookService) Create(_ context.Context, _, _ string, _ CreateWebhookOpts) (*Webhook, error) {
+	return nil, nil
+}
+
+func (m *mockWebhookService) Delete(_ context.Context, _, _ string, _ int64) error {
 	return nil
 }
 

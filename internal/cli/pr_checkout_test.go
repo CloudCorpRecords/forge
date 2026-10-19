@@ -97,6 +97,7 @@ func (m *mockForge) Releases() forges.ReleaseService            { return nil }
 func (m *mockForge) CI() forges.CIService                       { return nil }
 func (m *mockForge) Branches() forges.BranchService             { return nil }
 func (m *mockForge) DeployKeys() forges.DeployKeyService        { return nil }
+func (m *mockForge) Webhooks() forges.WebhookService            { return nil }
 func (m *mockForge) Secrets() forges.SecretService              { return nil }
 func (m *mockForge) Notifications() forges.NotificationService  { return nil }
 func (m *mockForge) Reviews() forges.ReviewService              { return nil }

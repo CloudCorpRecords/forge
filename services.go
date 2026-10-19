@@ -107,6 +107,14 @@ type DeployKeyService interface {
 	Delete(ctx context.Context, owner, repo string, id int64) error
 }
 
+// WebhookService provides operations on repository webhooks.
+type WebhookService interface {
+	List(ctx context.Context, owner, repo string, opts ListWebhookOpts) ([]Webhook, error)
+	Get(ctx context.Context, owner, repo string, id int64) (*Webhook, error)
+	Create(ctx context.Context, owner, repo string, opts CreateWebhookOpts) (*Webhook, error)
+	Delete(ctx context.Context, owner, repo string, id int64) error
+}
+
 // SecretService provides operations on repository secrets.
 type SecretService interface {
 	List(ctx context.Context, owner, repo string, opts ListSecretOpts) ([]Secret, error)

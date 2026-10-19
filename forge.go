@@ -68,6 +68,7 @@ type Forge interface {
 	CI() CIService
 	Branches() BranchService
 	DeployKeys() DeployKeyService
+	Webhooks() WebhookService
 	Secrets() SecretService
 	Notifications() NotificationService
 	Reviews() ReviewService

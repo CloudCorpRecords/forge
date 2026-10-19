@@ -14,6 +14,7 @@ type unsupportedMilestoneService struct{}
 type unsupportedReleaseService struct{}
 type unsupportedCIService struct{}
 type unsupportedDeployKeyService struct{}
+type unsupportedWebhookService struct{}
 type unsupportedSecretService struct{}
 type unsupportedNotificationService struct{}
 type unsupportedCollaboratorService struct{}
@@ -26,6 +27,7 @@ func (f *gerritForge) Milestones() forge.MilestoneService { return &unsupportedM
 func (f *gerritForge) Releases() forge.ReleaseService     { return &unsupportedReleaseService{} }
 func (f *gerritForge) CI() forge.CIService                { return &unsupportedCIService{} }
 func (f *gerritForge) DeployKeys() forge.DeployKeyService { return &unsupportedDeployKeyService{} }
+func (f *gerritForge) Webhooks() forge.WebhookService     { return &unsupportedWebhookService{} }
 func (f *gerritForge) Secrets() forge.SecretService       { return &unsupportedSecretService{} }
 func (f *gerritForge) Notifications() forge.NotificationService {
 	return &unsupportedNotificationService{}
@@ -169,6 +171,19 @@ func (s *unsupportedDeployKeyService) Create(context.Context, string, string, fo
 	return nil, forge.ErrNotSupported
 }
 func (s *unsupportedDeployKeyService) Delete(context.Context, string, string, int64) error {
+	return forge.ErrNotSupported
+}
+
+func (s *unsupportedWebhookService) List(context.Context, string, string, forge.ListWebhookOpts) ([]forge.Webhook, error) {
+	return nil, forge.ErrNotSupported
+}
+func (s *unsupportedWebhookService) Get(context.Context, string, string, int64) (*forge.Webhook, error) {
+	return nil, forge.ErrNotSupported
+}
+func (s *unsupportedWebhookService) Create(context.Context, string, string, forge.CreateWebhookOpts) (*forge.Webhook, error) {
+	return nil, forge.ErrNotSupported
+}
+func (s *unsupportedWebhookService) Delete(context.Context, string, string, int64) error {
 	return forge.ErrNotSupported
 }
 

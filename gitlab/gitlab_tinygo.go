@@ -128,6 +128,26 @@ func (s *gitLabDeployKeyService) Delete(ctx context.Context, owner, repo string,
 	return errTinyGo
 }
 
+type gitLabWebhookService struct{}
+
+func (f *gitLabForge) Webhooks() forge.WebhookService { return &gitLabWebhookService{} }
+
+func (s *gitLabWebhookService) List(ctx context.Context, owner, repo string, opts forge.ListWebhookOpts) ([]forge.Webhook, error) {
+	return nil, errTinyGo
+}
+
+func (s *gitLabWebhookService) Get(ctx context.Context, owner, repo string, id int64) (*forge.Webhook, error) {
+	return nil, errTinyGo
+}
+
+func (s *gitLabWebhookService) Create(ctx context.Context, owner, repo string, opts forge.CreateWebhookOpts) (*forge.Webhook, error) {
+	return nil, errTinyGo
+}
+
+func (s *gitLabWebhookService) Delete(ctx context.Context, owner, repo string, id int64) error {
+	return errTinyGo
+}
+
 type gitLabFileService struct{}
 
 func (f *gitLabForge) Files() forge.FileService { return &gitLabFileService{} }
