@@ -1,6 +1,9 @@
 package forges
 
-import "strings"
+import (
+	"strings"
+	"time"
+)
 
 // IssueState is the normalized lifecycle state for issues.
 type IssueState string
@@ -146,6 +149,18 @@ func NormalizeCIConclusion(conclusion string) CIConclusion {
 	default:
 		return CIConclusionUnknown
 	}
+}
+
+// CheckRun holds normalized metadata about a check run reported through a
+// forge's Checks API for a commit (e.g. GitHub check runs).
+type CheckRun struct {
+	ID          int64        `json:"id"`
+	Name        string       `json:"name"`
+	Status      CIStatus     `json:"status"` // queued, in_progress, completed
+	Conclusion  CIConclusion `json:"conclusion,omitempty"`
+	HTMLURL     string       `json:"html_url,omitempty"`
+	StartedAt   *time.Time   `json:"started_at,omitempty"`
+	CompletedAt *time.Time   `json:"completed_at,omitempty"`
 }
 
 // NormalizeCommitStatusState maps forge-specific commit status states to common states.

@@ -64,7 +64,8 @@ func (f *tangledForge) Collaborators() forges.CollaboratorService {
 func (f *tangledForge) CommitStatuses() forges.CommitStatusService {
 	return unsupportedCommitStatusService{}
 }
-func (f *tangledForge) Commits() forges.CommitService { return unsupportedCommitService{} }
+func (f *tangledForge) CheckRuns() forges.CheckRunService { return unsupportedCheckRunService{} }
+func (f *tangledForge) Commits() forges.CommitService     { return unsupportedCommitService{} }
 
 func (f *tangledForge) GetRateLimit(context.Context) (*forges.RateLimit, error) {
 	return nil, forges.ErrNotSupported

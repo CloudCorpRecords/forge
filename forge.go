@@ -75,6 +75,7 @@ type Forge interface {
 	Files() FileService
 	Collaborators() CollaboratorService
 	CommitStatuses() CommitStatusService
+	CheckRuns() CheckRunService
 	Commits() CommitService
 	GetRateLimit(ctx context.Context) (*RateLimit, error)
 	// ParsePath parses URL path segments into a resource reference.
