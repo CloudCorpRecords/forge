@@ -509,9 +509,9 @@ type ListDeployKeyOpts struct {
 // Webhook holds normalized metadata about a repository webhook.
 //
 // Events use GitHub's event names (push, issues, issue_comment, pull_request,
-// release and so on). GitHub and Gitea/Forgejo take them as is. GitLab maps
-// them onto its per-event flags and also accepts tag_push, which has no
-// GitHub equivalent.
+// release and so on). GitHub takes them as is. Gitea/Forgejo and GitLab
+// translate them to and from their own events and reject names they cannot
+// map. GitLab also accepts tag_push, which has no GitHub equivalent.
 type Webhook struct {
 	ID          int64     `json:"id"`
 	URL         string    `json:"url"` // payload delivery URL

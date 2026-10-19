@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/git-pkgs/forge"
@@ -136,8 +137,8 @@ func webhookDeleteCmd() *cobra.Command {
 		Short: "Delete a webhook",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			var id int64
-			if _, err := fmt.Sscanf(args[0], "%d", &id); err != nil {
+			id, err := strconv.ParseInt(args[0], 10, 64)
+			if err != nil || id <= 0 {
 				return fmt.Errorf("invalid webhook ID: %s", args[0])
 			}
 

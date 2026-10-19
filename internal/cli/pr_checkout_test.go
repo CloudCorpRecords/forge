@@ -84,8 +84,9 @@ func (m *mockPRService) ListURL(_ string) string {
 
 // mockForge implements forges.Forge for testing.
 type mockForge struct {
-	prService   *mockPRService
-	repoService forges.RepoService
+	prService      *mockPRService
+	repoService    forges.RepoService
+	webhookService forges.WebhookService
 }
 
 func (m *mockForge) Repos() forges.RepoService                  { return m.repoService }
@@ -97,7 +98,7 @@ func (m *mockForge) Releases() forges.ReleaseService            { return nil }
 func (m *mockForge) CI() forges.CIService                       { return nil }
 func (m *mockForge) Branches() forges.BranchService             { return nil }
 func (m *mockForge) DeployKeys() forges.DeployKeyService        { return nil }
-func (m *mockForge) Webhooks() forges.WebhookService            { return nil }
+func (m *mockForge) Webhooks() forges.WebhookService            { return m.webhookService }
 func (m *mockForge) Secrets() forges.SecretService              { return nil }
 func (m *mockForge) Notifications() forges.NotificationService  { return nil }
 func (m *mockForge) Reviews() forges.ReviewService              { return nil }
