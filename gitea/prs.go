@@ -3,6 +3,8 @@ package gitea
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	forge "github.com/git-pkgs/forge"
 
 	"code.gitea.io/sdk/gitea"
@@ -139,6 +141,38 @@ func (s *giteaPRService) Get(ctx context.Context, owner, repo string, number int
 	return &result, nil
 }
 
+// splitHeadFilter splits a --head filter value of the form "owner:branch" or
+// "branch" into its owner and branch parts. Git ref names cannot contain ":",
+// so the first colon is a safe separator.
+func splitHeadFilter(head string) (owner, branch string) {
+	if o, b, ok := strings.Cut(head, ":"); ok {
+		return o, b
+	}
+	return "", head
+}
+
+// headMatches reports whether pr satisfies a --head filter value. The
+// Gitea/Forgejo list-pull-requests API exposes no head filter and the SDK
+// does not send one (https://github.com/git-pkgs/forge/issues/111), so this
+// runs client-side with GitHub-compatible semantics: an unqualified value
+// matches the head branch name, while a qualified "owner:branch" value also
+// requires the head repository owner to match. A head that lives in the same
+// repository carries no fork info, so it matches when the qualifier names the
+// base repository owner instead.
+func headMatches(pr forge.PullRequest, baseOwner, head string) bool {
+	headOwner, branch := splitHeadFilter(head)
+	if branch == "" || pr.Head.Ref != branch {
+		return false
+	}
+	if headOwner == "" {
+		return true
+	}
+	if pr.Head.Fork != nil {
+		return strings.EqualFold(pr.Head.Fork.Owner, headOwner)
+	}
+	return strings.EqualFold(baseOwner, headOwner)
+}
+
 func (s *giteaPRService) List(ctx context.Context, owner, repo string, opts forge.ListPROpts) ([]forge.PullRequest, error) {
 	perPage := pageSize(opts.PerPage)
 	page := opts.Page
@@ -172,7 +206,15 @@ func (s *giteaPRService) List(ctx context.Context, owner, repo string, opts forg
 			return nil, wrapErr("list pull requests", resp, err)
 		}
 		for _, pr := range prs {
-			all = append(all, convertGiteaPR(pr))
+			converted := convertGiteaPR(pr)
+			// The Gitea/Forgejo API has no server-side head filter, so
+			// --head is applied client-side (git-pkgs/forge#111). The limit
+			// is enforced on filtered results, so filtered-out PRs never
+			// consume it.
+			if opts.Head != "" && !headMatches(converted, owner, opts.Head) {
+				continue
+			}
+			all = append(all, converted)
 		}
 		if lastPage(resp, len(prs), perPage) || (opts.Limit > 0 && len(all) >= opts.Limit) {
 			break
