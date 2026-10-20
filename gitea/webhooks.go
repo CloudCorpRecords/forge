@@ -13,6 +13,12 @@ import (
 // and pull_request as groups that also enable their comment and review
 // events, so create sends the *_only forms plus each sub-event to keep
 // GitHub's narrower meaning. Reads report the individual sub-events.
+//
+// Only events that both Gitea and Forgejo accept are listed, since both
+// silently ignore unknown names. status, workflow_run and workflow_job are
+// left out: Forgejo has no status event and only granular workflow_run_* and
+// workflow_job_* events, while Gitea only gained status in late 2024 and the
+// workflow events in 1.25.0.
 var giteaWebhookEvents = []struct {
 	name   string
 	create []string // events sent when creating a hook
@@ -46,9 +52,6 @@ var giteaWebhookEvents = []struct {
 	{name: "repository", create: []string{"repository"}, read: []string{"repository"}},
 	{name: "gollum", create: []string{"wiki"}, read: []string{"wiki"}},
 	{name: "package", create: []string{"package"}, read: []string{"package"}},
-	{name: "status", create: []string{"status"}, read: []string{"status"}},
-	{name: "workflow_run", create: []string{"workflow_run"}, read: []string{"workflow_run"}},
-	{name: "workflow_job", create: []string{"workflow_job"}, read: []string{"workflow_job"}},
 }
 
 // toGiteaEvents translates normalized event names into the events sent when

@@ -196,6 +196,33 @@ func TestGiteaCreateWebhookUnsupportedEvent(t *testing.T) {
 	}
 }
 
+func TestGiteaCreateWebhookRejectsVersionDependentEvents(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /api/v1/version", giteaVersionHandler)
+	mux.HandleFunc("POST /api/v1/repos/octocat/hello-world/hooks", func(w http.ResponseWriter, r *http.Request) {
+		t.Error("unexpected request for version-dependent event")
+	})
+
+	srv := httptest.NewServer(mux)
+	defer srv.Close()
+
+	f := New(srv.URL, "test-token", nil)
+	for _, event := range []string{"status", "workflow_run", "workflow_job"} {
+		t.Run(event, func(t *testing.T) {
+			if _, err := toGiteaEvents([]string{event}); err == nil {
+				t.Errorf("toGiteaEvents(%q): expected error, got nil", event)
+			}
+			_, err := f.Webhooks().Create(context.Background(), "octocat", "hello-world", forge.CreateWebhookOpts{
+				URL:    "https://example.com/hook",
+				Events: []string{"push", event},
+			})
+			if err == nil {
+				t.Errorf("Create with %q: expected error, got nil", event)
+			}
+		})
+	}
+}
+
 func TestGiteaWebhookEventMapping(t *testing.T) {
 	tests := []struct {
 		name   string
@@ -214,9 +241,6 @@ func TestGiteaWebhookEventMapping(t *testing.T) {
 		{"repository", []string{"repository"}, []string{"repository"}},
 		{"gollum", []string{"wiki"}, []string{"wiki"}},
 		{"package", []string{"package"}, []string{"package"}},
-		{"status", []string{"status"}, []string{"status"}},
-		{"workflow_run", []string{"workflow_run"}, []string{"workflow_run"}},
-		{"workflow_job", []string{"workflow_job"}, []string{"workflow_job"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
