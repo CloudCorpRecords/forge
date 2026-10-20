@@ -338,6 +338,37 @@ func TestDomainHostOverride(t *testing.T) {
 	}
 }
 
+func TestRepoFromGitRemoteHostOverride(t *testing.T) {
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git not installed")
+	}
+	config.ResetCache()
+	defer config.ResetCache()
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+
+	t.Chdir(t.TempDir())
+	mustGit(t, "init", "-q")
+	mustGit(t, "remote", "add", "origin", "https://git.selfhosted.test/someone/project.git")
+
+	oldH, oldS := hostOverride, schemeOverride
+	defer func() { hostOverride, schemeOverride = oldH, oldS }()
+	SetHost("github.com")
+
+	f, owner, repo, domain, err := Repo("", "")
+	if err != nil {
+		t.Fatalf("Repo: %v", err)
+	}
+	if domain != "github.com" {
+		t.Errorf("domain = %q, want --host to override the remote's domain", domain)
+	}
+	if owner != "someone" || repo != "project" {
+		t.Errorf("owner/repo = %s/%s, want someone/project from the remote", owner, repo)
+	}
+	if f == nil {
+		t.Fatal("expected a forge instance")
+	}
+}
+
 func TestForgeTypeOverrideSkipsDetection(t *testing.T) {
 	config.ResetCache()
 	defer config.ResetCache()

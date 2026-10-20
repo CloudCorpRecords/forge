@@ -157,6 +157,11 @@ func repoFromGitRemote(_ string) (forges.Forge, string, string, string, error) {
 	if err != nil {
 		return nil, "", "", "", err
 	}
+	// --host picks the forge to talk to; the remote still supplies owner/repo,
+	// e.g. for a repo mirrored from a self-hosted forge to github.com.
+	if hostOverride != "" {
+		domain = hostOverride
+	}
 
 	client := newClient(domain)
 	f, err := forgeForDomainMaybeConfig(context.Background(), client, domain)
