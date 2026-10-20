@@ -20,7 +20,7 @@ const defaultPRChecksRunLimit = 20
 // one, so failures take precedence when both are present.
 const (
 	prChecksExitFailed  = 1
-	prChecksExitPending = 2
+	prChecksExitPending = 8 // matches 'gh pr checks'
 )
 
 // exitError is a command error that carries a process exit code. cmd/forge
@@ -51,7 +51,7 @@ pull request of the current branch when no number is given.
 Lists commit statuses and check runs for the PR's head commit and CI
 pipeline runs for the PR's head branch, like 'gh pr checks'.
 
-Exits 0 when every check passed, 1 when any check failed, and 2 when
+Exits 0 when every check passed, 1 when any check failed, and 8 when
 no check failed but some are still pending.`,
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -90,7 +90,7 @@ no check failed but some are still pending.`,
 						return fmt.Errorf("listing commit statuses: %w", err)
 					}
 				} else {
-					result.CommitStatuses = statuses
+					result.CommitStatuses = latestCommitStatuses(statuses)
 					statusesListed = true
 				}
 
@@ -133,6 +133,32 @@ no check failed but some are still pending.`,
 		},
 	}
 	return cmd
+}
+
+// latestCommitStatuses collapses the full status history that ListStatuses
+// returns for a ref to the newest entry per Context (by CreatedAt), keeping
+// first-seen context order. Without this, a context that posted pending and
+// then success keeps both entries: the table shows duplicate rows and the
+// stale pending makes the command exit nonzero forever.
+func latestCommitStatuses(statuses []forges.CommitStatus) []forges.CommitStatus {
+	latest := make(map[string]int, len(statuses))
+	var order []string
+	for i, s := range statuses {
+		j, seen := latest[s.Context]
+		if !seen {
+			latest[s.Context] = i
+			order = append(order, s.Context)
+			continue
+		}
+		if s.CreatedAt.After(statuses[j].CreatedAt) {
+			latest[s.Context] = i
+		}
+	}
+	out := make([]forges.CommitStatus, 0, len(order))
+	for _, context := range order {
+		out = append(out, statuses[latest[context]])
+	}
+	return out
 }
 
 // filterCIRunsForSHA keeps only runs for the given head commit. Runs that do
@@ -218,14 +244,6 @@ func printPRChecks(result *prChecksResult) error {
 		return prChecksExitError(result)
 	}
 
-	pr := result.PR
-	sha := pr.Head.SHA
-	if len(sha) > shortSHALength {
-		sha = sha[:shortSHALength]
-	}
-	_, _ = fmt.Fprintf(os.Stdout, "Checks for #%d %s (%s on %s)\n",
-		pr.Number, output.Sanitize(pr.Title), sha, pr.Head.Ref)
-
 	if p.Format == output.Plain {
 		var lines []string
 		for _, s := range result.CommitStatuses {
@@ -240,6 +258,16 @@ func printPRChecks(result *prChecksResult) error {
 		p.PrintPlain(lines)
 		return prChecksExitError(result)
 	}
+
+	// The header is not a data line, so it is printed only after the plain
+	// branch above, like the other commands' plain output.
+	pr := result.PR
+	sha := pr.Head.SHA
+	if len(sha) > shortSHALength {
+		sha = sha[:shortSHALength]
+	}
+	_, _ = fmt.Fprintf(os.Stdout, "Checks for #%d %s (%s on %s)\n",
+		pr.Number, output.Sanitize(pr.Title), sha, pr.Head.Ref)
 
 	if result.CommitStatuses != nil {
 		_, _ = fmt.Fprintln(os.Stdout)

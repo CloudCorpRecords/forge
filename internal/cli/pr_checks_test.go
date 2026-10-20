@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/git-pkgs/forge"
 	"github.com/git-pkgs/forge/internal/resolve"
@@ -236,7 +237,7 @@ func TestPRChecksFailedExitCode(t *testing.T) {
 }
 
 // TestPRChecksPendingExitCode exercises the command end to end: with no
-// failures but a pending status, the exit code is 2.
+// failures but a pending status, the exit code is 8.
 func TestPRChecksPendingExitCode(t *testing.T) {
 	resetCmd(rootCmd)
 
@@ -327,7 +328,7 @@ func TestPRChecksCheckRunsAbsentFromOtherSources(t *testing.T) {
 	t.Cleanup(resolve.ResetTestForge)
 
 	out, err := runPRChecksCmd(t, []string{"42"})
-	// The running deploy check is pending, so the command exits 2.
+	// The running deploy check is pending, so the command exits 8.
 	var ee *exitError
 	if !errors.As(err, &ee) || ee.ExitCode() != prChecksExitPending {
 		t.Fatalf("error = %v, want exit code %d", err, prChecksExitPending)
@@ -375,8 +376,51 @@ func TestPRChecksPlainOutputConclusions(t *testing.T) {
 			t.Errorf("plain output missing %q:\n%s", want, out)
 		}
 	}
+	// Plain output is data lines only: the "Checks for #N" header is not
+	// tab-separated and must not appear.
+	if strings.Contains(out, "Checks for") {
+		t.Errorf("plain output contains the header line:\n%s", out)
+	}
 	if strings.Contains(out, "ci\t1\tbuild\tcompleted") || strings.Contains(out, "ci\t2\ttest\tcompleted") {
 		t.Errorf("plain output shows bare status instead of conclusion:\n%s", out)
+	}
+}
+
+// TestPRChecksStalePendingStatusIgnored exercises the command end to end:
+// ListStatuses returns the full history for a ref, so a context that posted
+// pending and then success yields both entries. Only the newest status per
+// context counts, so the command exits 0 and prints a single row.
+func TestPRChecksStalePendingStatusIgnored(t *testing.T) {
+	resetCmd(rootCmd)
+
+	prs := &mockPRService{
+		pr: &forges.PullRequest{
+			Number: 42,
+			Title:  "Fix the thing",
+			Head:   forges.PRBranch{Ref: "feature", SHA: "abc123"},
+		},
+	}
+	earlier := time.Date(2026, 10, 20, 8, 0, 0, 0, time.UTC)
+	statuses := &mockCommitStatusService{
+		listResult: []forges.CommitStatus{
+			{State: forges.CommitStatusPending, Context: "ci/build", CreatedAt: earlier},
+			{State: forges.CommitStatusSuccess, Context: "ci/build", CreatedAt: earlier.Add(time.Minute)},
+		},
+	}
+	checks := &mockCheckRunService{}
+	ci := &mockCIService{}
+	resolve.SetTestForge(&mockForge{prService: prs, ciService: ci, commitStatusService: statuses, checkRunService: checks}, "owner", "repo", "example.com")
+	t.Cleanup(resolve.ResetTestForge)
+
+	out, err := runPRChecksCmd(t, []string{"42"})
+	if err != nil {
+		t.Fatalf("pr checks: %v (a stale pending status must not fail the command); output:\n%s", err, out)
+	}
+	if n := strings.Count(out, "ci/build"); n != 1 {
+		t.Errorf("output has %d rows for ci/build, want 1:\n%s", n, out)
+	}
+	if strings.Contains(out, "pending") {
+		t.Errorf("output shows the stale pending status:\n%s", out)
 	}
 }
 
