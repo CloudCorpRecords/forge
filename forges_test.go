@@ -761,6 +761,16 @@ func (m *mockForge) CommitStatuses() CommitStatusService {
 	return &mockCommitStatusService{}
 }
 
+type mockCheckRunService struct{}
+
+func (m *mockCheckRunService) List(context.Context, string, string, string) ([]CheckRun, error) {
+	return nil, nil
+}
+
+func (m *mockForge) CheckRuns() CheckRunService {
+	return &mockCheckRunService{}
+}
+
 func (m *mockForge) Commits() CommitService {
 	if m.commitService != nil {
 		return m.commitService

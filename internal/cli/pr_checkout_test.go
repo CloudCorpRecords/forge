@@ -84,10 +84,13 @@ func (m *mockPRService) ListURL(_ string) string {
 
 // mockForge implements forges.Forge for testing.
 type mockForge struct {
-	prService      *mockPRService
-	repoService    forges.RepoService
-	releaseService forges.ReleaseService
-	webhookService forges.WebhookService
+	prService           *mockPRService
+	repoService         forges.RepoService
+	releaseService      forges.ReleaseService
+	webhookService      forges.WebhookService
+	ciService           forges.CIService
+	commitStatusService forges.CommitStatusService
+	checkRunService     forges.CheckRunService
 }
 
 func (m *mockForge) Repos() forges.RepoService                  { return m.repoService }
@@ -96,7 +99,7 @@ func (m *mockForge) PullRequests() forges.PullRequestService    { return m.prSer
 func (m *mockForge) Labels() forges.LabelService                { return nil }
 func (m *mockForge) Milestones() forges.MilestoneService        { return nil }
 func (m *mockForge) Releases() forges.ReleaseService            { return m.releaseService }
-func (m *mockForge) CI() forges.CIService                       { return nil }
+func (m *mockForge) CI() forges.CIService                       { return m.ciService }
 func (m *mockForge) Branches() forges.BranchService             { return nil }
 func (m *mockForge) DeployKeys() forges.DeployKeyService        { return nil }
 func (m *mockForge) Webhooks() forges.WebhookService            { return m.webhookService }
@@ -105,7 +108,8 @@ func (m *mockForge) Notifications() forges.NotificationService  { return nil }
 func (m *mockForge) Reviews() forges.ReviewService              { return nil }
 func (m *mockForge) Files() forges.FileService                  { return nil }
 func (m *mockForge) Collaborators() forges.CollaboratorService  { return nil }
-func (m *mockForge) CommitStatuses() forges.CommitStatusService { return nil }
+func (m *mockForge) CommitStatuses() forges.CommitStatusService { return m.commitStatusService }
+func (m *mockForge) CheckRuns() forges.CheckRunService          { return m.checkRunService }
 func (m *mockForge) Commits() forges.CommitService              { return nil }
 func (m *mockForge) GetRateLimit(_ context.Context) (*forges.RateLimit, error) {
 	return nil, forges.ErrNotSupported

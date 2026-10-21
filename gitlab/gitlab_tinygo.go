@@ -92,6 +92,14 @@ type gitLabCommitStatusService struct{}
 
 func (f *gitLabForge) CommitStatuses() forge.CommitStatusService { return &gitLabCommitStatusService{} }
 
+func (f *gitLabForge) CheckRuns() forge.CheckRunService { return &gitLabCheckRunService{} }
+
+type gitLabCheckRunService struct{}
+
+func (s *gitLabCheckRunService) List(ctx context.Context, owner, repo, sha string) ([]forge.CheckRun, error) {
+	return nil, errTinyGo
+}
+
 func (s *gitLabCommitStatusService) List(ctx context.Context, owner, repo, sha string) ([]forge.CommitStatus, error) {
 	return nil, errTinyGo
 }

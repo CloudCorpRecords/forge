@@ -266,6 +266,12 @@ func (unsupportedCommitStatusService) Set(context.Context, string, string, strin
 	return nil, forges.ErrNotSupported
 }
 
+type unsupportedCheckRunService struct{}
+
+func (unsupportedCheckRunService) List(context.Context, string, string, string) ([]forges.CheckRun, error) {
+	return nil, forges.ErrNotSupported
+}
+
 type unsupportedCommitService struct{}
 
 func (unsupportedCommitService) ResolveCommit(context.Context, string, string, string) (string, error) {

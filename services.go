@@ -156,6 +156,11 @@ type CommitStatusService interface {
 	Set(ctx context.Context, owner, repo, sha string, opts SetCommitStatusOpts) (*CommitStatus, error)
 }
 
+// CheckRunService provides operations on check runs (a forge's Checks API).
+type CheckRunService interface {
+	List(ctx context.Context, owner, repo, sha string) ([]CheckRun, error)
+}
+
 // IssueService provides operations on issues.
 type IssueService interface {
 	Get(ctx context.Context, owner, repo string, number int) (*Issue, error)
