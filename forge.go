@@ -24,6 +24,10 @@ var ErrNotSupported = errors.New("not supported by this forge")
 // ErrLabelExists is returned when creating a label that already exists.
 var ErrLabelExists = errors.New("label already exists")
 
+// ErrInvalidWebhookSignature is returned when a webhook delivery's signature
+// or token does not match the expected secret.
+var ErrInvalidWebhookSignature = errors.New("invalid webhook signature")
+
 // ResourceType identifies the kind of resource a URL points to.
 type ResourceType string
 

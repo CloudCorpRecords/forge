@@ -3,6 +3,7 @@ package cli
 import (
 	"context"
 	"io"
+	"net/http"
 	"testing"
 
 	"github.com/git-pkgs/forge"
@@ -28,6 +29,10 @@ func (m *mockWebhookService) Create(context.Context, string, string, forges.Crea
 func (m *mockWebhookService) Delete(_ context.Context, _, _ string, id int64) error {
 	m.deletedIDs = append(m.deletedIDs, id)
 	return nil
+}
+
+func (m *mockWebhookService) ParseEvent(*http.Request, string) (*forges.WebhookEvent, error) {
+	return nil, nil
 }
 
 func TestWebhookSubcommands(t *testing.T) {

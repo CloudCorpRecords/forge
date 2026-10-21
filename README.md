@@ -174,6 +174,27 @@ issues, _ := f.Issues().List(ctx, "octocat", "hello-world", forges.ListIssueOpts
 pr, _ := f.PullRequests().Get(ctx, "octocat", "hello-world", 42)
 ```
 
+Incoming webhook deliveries from GitHub, GitLab and Gitea/Forgejo can be verified and parsed into a normalized `WebhookEvent`. Event types use the same names as `Webhook.Events`, and push, pull request, issue, comment and release deliveries carry typed fields. The raw JSON is always available in `Payload`.
+
+```go
+http.HandleFunc("/hook", func(w http.ResponseWriter, r *http.Request) {
+    event, err := f.Webhooks().ParseEvent(r, os.Getenv("WEBHOOK_SECRET"))
+    if errors.Is(err, forges.ErrInvalidWebhookSignature) {
+        http.Error(w, "bad signature", http.StatusUnauthorized)
+        return
+    }
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusBadRequest)
+        return
+    }
+    if event.Type == "pull_request" && event.Action == "opened" {
+        log.Printf("new PR #%d in %s", event.PullRequest.Number, event.Repository.FullName)
+    }
+})
+```
+
+Each backend also exports `ParseWebhook(r, secret)` (for example `github.ParseWebhook`), which needs no API client.
+
 Self-hosted instances can be registered explicitly or detected automatically:
 
 ```go

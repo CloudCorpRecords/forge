@@ -1,6 +1,9 @@
 package forges
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 // ForgeType identifies which forge software a domain runs.
 type ForgeType string
@@ -538,6 +541,56 @@ type ListWebhookOpts struct {
 	Limit   int // max total results; 0 = unlimited
 	Page    int // starting page; 0 or 1 = first page
 	PerPage int // results per API request; 0 = default
+}
+
+// WebhookEvent holds a normalized webhook delivery parsed by
+// WebhookService.ParseEvent.
+//
+// Type uses the same names as Webhook.Events, so a hook subscribed to
+// pull_request delivers events whose Type is pull_request on every forge.
+// Deliveries with no normalized name keep the forge's own event name.
+//
+// Action uses GitHub's action names where the forge's action has an
+// equivalent (opened, closed, reopened, edited, synchronize, created,
+// deleted, published) and is kept as sent otherwise. A merged pull request
+// arrives as closed with PullRequest.Merged set, as on GitHub.
+//
+// The typed fields are set for the events that carry them: push and tag_push
+// set Push, pull_request sets PullRequest, issues sets Issue, release sets
+// Release and issue_comment sets Comment plus either Issue or PullRequest
+// depending on what was commented on. Payload always holds the raw JSON.
+type WebhookEvent struct {
+	Type        string          `json:"type"`
+	Action      string          `json:"action,omitempty"`
+	DeliveryID  string          `json:"delivery_id,omitempty"`
+	Repository  *Repository     `json:"repository,omitempty"`
+	Sender      *User           `json:"sender,omitempty"`
+	Push        *WebhookPush    `json:"push,omitempty"`
+	PullRequest *PullRequest    `json:"pull_request,omitempty"`
+	Issue       *Issue          `json:"issue,omitempty"`
+	Comment     *Comment        `json:"comment,omitempty"`
+	Release     *Release        `json:"release,omitempty"`
+	Payload     json.RawMessage `json:"payload"`
+}
+
+// WebhookPush holds the details of a push or tag push delivery.
+type WebhookPush struct {
+	Ref     string          `json:"ref"`    // full ref, e.g. refs/heads/main
+	Before  string          `json:"before"` // all zeros when the ref was created
+	After   string          `json:"after"`  // all zeros when the ref was deleted
+	Created bool            `json:"created"`
+	Deleted bool            `json:"deleted"`
+	Commits []WebhookCommit `json:"commits,omitempty"`
+}
+
+// WebhookCommit holds a commit included in a push delivery.
+type WebhookCommit struct {
+	SHA         string    `json:"sha"`
+	Message     string    `json:"message"`
+	URL         string    `json:"url,omitempty"`
+	AuthorName  string    `json:"author_name,omitempty"`
+	AuthorEmail string    `json:"author_email,omitempty"`
+	Timestamp   time.Time `json:"timestamp,omitzero"`
 }
 
 // Secret holds normalized metadata about a repository secret.
