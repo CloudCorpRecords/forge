@@ -60,7 +60,7 @@ Command for token (e.g. rbw get github.com): rbw get github-token
 
 Check what's configured with `forge auth status`.
 
-Tokens are resolved in this order: CLI flags, environment variables (`FORGE_TOKEN`, `GITHUB_TOKEN`/`GH_TOKEN`, `GITLAB_TOKEN`, `FORGEJO_TOKEN`/`GITEA_TOKEN`, `BITBUCKET_TOKEN`, `TANGLED_TOKEN`), then the config file at `~/.config/forge/config`. The target host is inferred from the current directory's git remote; use `--host` or `FORGE_HOST` to override it (for example `forge --host gitea.com repo list someone`).
+Tokens are resolved in this order: CLI flags, environment variables (`FORGE_TOKEN`, `GITHUB_TOKEN`/`GH_TOKEN`, `GITLAB_TOKEN`, `FORGEJO_TOKEN`/`GITEA_TOKEN`, `BITBUCKET_TOKEN`, `TANGLED_TOKEN`), then the config file at `~/.config/forge/config`. The target host is inferred from the current directory's git remote; use `--host` to override it (for example `forge --host gitea.com repo list someone`). `FORGE_HOST` sets the host for `-R OWNER/REPO` and for commands that don't act on the current repo, but doesn't override the current repo's remote.
 
 ### Configuration
 
