@@ -524,6 +524,48 @@ func TestPRChecksJSONOutput(t *testing.T) {
 	}
 }
 
+// TestPRChecksEmptySourcesShown covers backends that return nil when a listed
+// source has nothing: each section still prints and JSON has [] not null.
+func TestPRChecksEmptySourcesShown(t *testing.T) {
+	prs := &mockPRService{
+		pr: &forges.PullRequest{
+			Number: 42,
+			Title:  "Fix the thing",
+			Head:   forges.PRBranch{Ref: "feature", SHA: "abc123"},
+		},
+	}
+	resolve.SetTestForge(&mockForge{
+		prService:           prs,
+		ciService:           &mockCIService{},
+		commitStatusService: &mockCommitStatusService{},
+		checkRunService:     &mockCheckRunService{},
+	}, "owner", "repo", "example.com")
+	t.Cleanup(resolve.ResetTestForge)
+
+	resetCmd(rootCmd)
+	out, err := runPRChecksCmd(t, []string{"42"})
+	if err != nil {
+		t.Fatalf("pr checks: %v", err)
+	}
+	for _, want := range []string{"No commit statuses reported", "No check runs reported", "No CI runs for this commit"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("output missing %q:\n%s", want, out)
+		}
+	}
+
+	oldOutput := flagOutput
+	flagOutput = "json"
+	defer func() { flagOutput = oldOutput }()
+
+	out, err = runPRChecksCmd(t, []string{"42"})
+	if err != nil {
+		t.Fatalf("pr checks json: %v", err)
+	}
+	if strings.Contains(out, "null") {
+		t.Errorf("JSON output has null for a listed source:\n%s", out)
+	}
+}
+
 func TestFilterCIRunsForSHA(t *testing.T) {
 	runs := []forges.CIRun{
 		{ID: 1, SHA: "abc"},

@@ -103,7 +103,8 @@ no check failed but some are still pending.`,
 						return fmt.Errorf("listing check runs: %w", err)
 					}
 				} else {
-					result.CheckRuns = checkRuns
+					// Non-nil so an empty listed source still prints its section.
+					result.CheckRuns = append([]forges.CheckRun{}, checkRuns...)
 					checksListed = true
 				}
 			}
@@ -120,7 +121,7 @@ no check failed but some are still pending.`,
 						return fmt.Errorf("listing CI runs: %w", err)
 					}
 				} else {
-					result.CIRuns = filterCIRunsForSHA(runs, pr.Head.SHA)
+					result.CIRuns = append([]forges.CIRun{}, filterCIRunsForSHA(runs, pr.Head.SHA)...)
 					runsListed = true
 				}
 			}
