@@ -506,6 +506,40 @@ type ListDeployKeyOpts struct {
 	PerPage int // results per API request; 0 = default
 }
 
+// Webhook holds normalized metadata about a repository webhook.
+//
+// Events use GitHub's event names (push, issues, issue_comment, pull_request,
+// release and so on). GitHub takes them as is. Gitea/Forgejo and GitLab
+// translate them to and from their own events and reject names they cannot
+// map. GitLab also accepts tag_push, which has no GitHub equivalent.
+type Webhook struct {
+	ID          int64     `json:"id"`
+	URL         string    `json:"url"` // payload delivery URL
+	Events      []string  `json:"events"`
+	Active      bool      `json:"active"`
+	ContentType string    `json:"content_type,omitempty"` // json or form
+	InsecureSSL bool      `json:"insecure_ssl"`
+	CreatedAt   time.Time `json:"created_at,omitzero"`
+	UpdatedAt   time.Time `json:"updated_at,omitzero"`
+}
+
+// CreateWebhookOpts holds options for creating a webhook. The webhook is
+// created active.
+type CreateWebhookOpts struct {
+	URL         string
+	Secret      string   // shared secret for signing or verifying deliveries
+	Events      []string // empty = push only
+	ContentType string   // json (default) or form; ignored on GitLab
+	InsecureSSL bool     // skip TLS verification; ignored on Gitea/Forgejo
+}
+
+// ListWebhookOpts holds options for listing webhooks.
+type ListWebhookOpts struct {
+	Limit   int // max total results; 0 = unlimited
+	Page    int // starting page; 0 or 1 = first page
+	PerPage int // results per API request; 0 = default
+}
+
 // Secret holds normalized metadata about a repository secret.
 type Secret struct {
 	Name      string    `json:"name"`

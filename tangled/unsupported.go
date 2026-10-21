@@ -191,6 +191,21 @@ func (unsupportedDeployKeyService) Delete(context.Context, string, string, int64
 	return forges.ErrNotSupported
 }
 
+type unsupportedWebhookService struct{}
+
+func (unsupportedWebhookService) List(context.Context, string, string, forges.ListWebhookOpts) ([]forges.Webhook, error) {
+	return nil, forges.ErrNotSupported
+}
+func (unsupportedWebhookService) Get(context.Context, string, string, int64) (*forges.Webhook, error) {
+	return nil, forges.ErrNotSupported
+}
+func (unsupportedWebhookService) Create(context.Context, string, string, forges.CreateWebhookOpts) (*forges.Webhook, error) {
+	return nil, forges.ErrNotSupported
+}
+func (unsupportedWebhookService) Delete(context.Context, string, string, int64) error {
+	return forges.ErrNotSupported
+}
+
 type unsupportedSecretService struct{}
 
 func (unsupportedSecretService) List(context.Context, string, string, forges.ListSecretOpts) ([]forges.Secret, error) {

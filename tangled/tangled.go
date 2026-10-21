@@ -52,6 +52,7 @@ func (f *tangledForge) Milestones() forges.MilestoneService     { return unsuppo
 func (f *tangledForge) Releases() forges.ReleaseService         { return unsupportedReleaseService{} }
 func (f *tangledForge) CI() forges.CIService                    { return unsupportedCIService{} }
 func (f *tangledForge) DeployKeys() forges.DeployKeyService     { return unsupportedDeployKeyService{} }
+func (f *tangledForge) Webhooks() forges.WebhookService         { return unsupportedWebhookService{} }
 func (f *tangledForge) Secrets() forges.SecretService           { return unsupportedSecretService{} }
 func (f *tangledForge) Notifications() forges.NotificationService {
 	return unsupportedNotificationService{}
