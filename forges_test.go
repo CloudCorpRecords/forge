@@ -828,6 +828,10 @@ func (m *mockWebhookService) Delete(_ context.Context, _, _ string, _ int64) err
 	return nil
 }
 
+func (m *mockWebhookService) ParseEvent(_ *http.Request, _ string) (*WebhookEvent, error) {
+	return nil, nil
+}
+
 type mockCommitStatusService struct{}
 
 func (m *mockCommitStatusService) List(_ context.Context, _, _, _ string) ([]CommitStatus, error) {

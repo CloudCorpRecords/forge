@@ -3,6 +3,7 @@ package tangled
 import (
 	"context"
 	"io"
+	"net/http"
 	"os"
 
 	forges "github.com/git-pkgs/forge"
@@ -204,6 +205,9 @@ func (unsupportedWebhookService) Create(context.Context, string, string, forges.
 }
 func (unsupportedWebhookService) Delete(context.Context, string, string, int64) error {
 	return forges.ErrNotSupported
+}
+func (unsupportedWebhookService) ParseEvent(*http.Request, string) (*forges.WebhookEvent, error) {
+	return nil, forges.ErrNotSupported
 }
 
 type unsupportedSecretService struct{}

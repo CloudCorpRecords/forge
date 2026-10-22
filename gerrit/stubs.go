@@ -3,6 +3,7 @@ package gerrit
 import (
 	"context"
 	"io"
+	"net/http"
 	"os"
 
 	forge "github.com/git-pkgs/forge"
@@ -189,6 +190,9 @@ func (s *unsupportedWebhookService) Create(context.Context, string, string, forg
 }
 func (s *unsupportedWebhookService) Delete(context.Context, string, string, int64) error {
 	return forge.ErrNotSupported
+}
+func (s *unsupportedWebhookService) ParseEvent(*http.Request, string) (*forge.WebhookEvent, error) {
+	return nil, forge.ErrNotSupported
 }
 
 func (s *unsupportedSecretService) List(context.Context, string, string, forge.ListSecretOpts) ([]forge.Secret, error) {

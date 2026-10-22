@@ -1,5 +1,3 @@
-//go:build !tinygo
-
 package gitlab
 
 import "testing"

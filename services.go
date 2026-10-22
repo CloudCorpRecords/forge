@@ -3,6 +3,7 @@ package forges
 import (
 	"context"
 	"io"
+	"net/http"
 	"os"
 )
 
@@ -113,6 +114,11 @@ type WebhookService interface {
 	Get(ctx context.Context, owner, repo string, id int64) (*Webhook, error)
 	Create(ctx context.Context, owner, repo string, opts CreateWebhookOpts) (*Webhook, error)
 	Delete(ctx context.Context, owner, repo string, id int64) error
+	// ParseEvent verifies and parses an incoming webhook delivery. When secret
+	// is non-empty the delivery must carry a matching signature or token, or
+	// ErrInvalidWebhookSignature is returned. An empty secret skips
+	// verification, which is only safe for hooks created without one.
+	ParseEvent(r *http.Request, secret string) (*WebhookEvent, error)
 }
 
 // SecretService provides operations on repository secrets.

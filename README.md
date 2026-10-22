@@ -166,13 +166,41 @@ repo, err := client.FetchRepository(ctx, "https://github.com/octocat/hello-world
 
 The `Forge` interface exposes services for repos, issues, pull requests, reviews, releases, CI, branches, labels, milestones, deploy keys, webhooks, secrets, notifications, files, collaborators, commit statuses and commits. Each backend implements these using its native SDK.
 
-Under TinyGo, `gitlab.New` retains its signature and returns a backend whose API operations report `forges.ErrNotSupported`. GitLab URL parsing and web link builders remain available. Native Go retains the full GitLab implementation.
+Under TinyGo, `gitlab.New` retains its signature and returns a backend whose API operations report `forges.ErrNotSupported`. GitLab URL parsing, web link builders and webhook parsing remain available. Native Go retains the full GitLab implementation.
 
 ```go
 f, _ := client.ForgeFor("github.com")
 issues, _ := f.Issues().List(ctx, "octocat", "hello-world", forges.ListIssueOpts{State: "open"})
 pr, _ := f.PullRequests().Get(ctx, "octocat", "hello-world", 42)
 ```
+
+Incoming webhook deliveries from GitHub, GitLab and Gitea/Forgejo can be verified and parsed into a normalized `WebhookEvent`. Event types use the same names as `Webhook.Events`. Push, pull request, issue, comment and release deliveries carry typed fields. The raw JSON is always available in `Payload`.
+
+An empty secret skips verification, so read the secret once at startup and refuse to run without it:
+
+```go
+secret := os.Getenv("WEBHOOK_SECRET")
+if secret == "" {
+    log.Fatal("WEBHOOK_SECRET must be set")
+}
+
+http.HandleFunc("/hook", func(w http.ResponseWriter, r *http.Request) {
+    event, err := f.Webhooks().ParseEvent(r, secret)
+    if errors.Is(err, forges.ErrInvalidWebhookSignature) {
+        http.Error(w, "bad signature", http.StatusUnauthorized)
+        return
+    }
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusBadRequest)
+        return
+    }
+    if event.Type == "pull_request" && event.Action == "opened" {
+        log.Printf("new PR #%d in %s", event.PullRequest.Number, event.Repository.FullName)
+    }
+})
+```
+
+Each backend also exports `ParseWebhook(r, secret)` (for example `github.ParseWebhook`), which needs no API client.
 
 Self-hosted instances can be registered explicitly or detected automatically:
 

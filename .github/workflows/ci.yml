@@ -82,11 +82,11 @@ jobs:
           tar -xJf wasmtime.tar.xz
           echo "$RUNNER_TEMP/wasmtime-v44.0.1-x86_64-linux" >> "$GITHUB_PATH"
 
-      - name: Test TinyGo WebAssembly GitLab fallback and URLs
-        run: tinygo test -target=wasm -run '^(TestTinyGoClientRouting|TestTinyGoServicesReturnUnsupported|TestGitLabPortableURLs)$' -v ./gitlab
+      - name: Test TinyGo WebAssembly GitLab fallback, URLs and webhook parsing
+        run: tinygo test -target=wasm -run '^(TestTinyGoClientRouting|TestTinyGoServicesReturnUnsupported|TestGitLabPortableURLs|TestGitLabParseWebhook.*|TestGitLabWebhookServiceParseEvent)$' -v ./gitlab
 
-      - name: Test TinyGo WASI GitLab fallback and URLs
-        run: tinygo test -target=wasip1 -run '^(TestTinyGoClientRouting|TestTinyGoServicesReturnUnsupported|TestGitLabPortableURLs)$' -v ./gitlab
+      - name: Test TinyGo WASI GitLab fallback, URLs and webhook parsing
+        run: tinygo test -target=wasip1 -run '^(TestTinyGoClientRouting|TestTinyGoServicesReturnUnsupported|TestGitLabPortableURLs|TestGitLabParseWebhook.*|TestGitLabWebhookServiceParseEvent)$' -v ./gitlab
 
   lint:
     runs-on: ubuntu-latest

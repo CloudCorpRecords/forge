@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	forge "github.com/git-pkgs/forge"
+	"net/http/httptest"
 	"testing"
 )
 
@@ -28,5 +29,10 @@ func TestBitbucketWebhookNotSupported(t *testing.T) {
 	err = svc.Delete(context.Background(), "owner", "repo", 1)
 	if !errors.Is(err, forge.ErrNotSupported) {
 		t.Errorf("Delete: expected forge.ErrNotSupported, got %v", err)
+	}
+
+	_, err = svc.ParseEvent(httptest.NewRequest("POST", "/hook", nil), "")
+	if !errors.Is(err, forge.ErrNotSupported) {
+		t.Errorf("ParseEvent: expected forge.ErrNotSupported, got %v", err)
 	}
 }
