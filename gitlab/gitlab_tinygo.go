@@ -156,13 +156,9 @@ func (s *gitLabWebhookService) Delete(ctx context.Context, owner, repo string, i
 	return errTinyGo
 }
 
+// ParseEvent works under TinyGo because parsing needs no API client.
 func (s *gitLabWebhookService) ParseEvent(r *http.Request, secret string) (*forge.WebhookEvent, error) {
-	return nil, errTinyGo
-}
-
-// ParseWebhook reports forge.ErrNotSupported under TinyGo.
-func ParseWebhook(r *http.Request, secret string) (*forge.WebhookEvent, error) {
-	return nil, errTinyGo
+	return ParseWebhook(r, secret)
 }
 
 type gitLabFileService struct{}

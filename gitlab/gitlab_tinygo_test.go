@@ -55,14 +55,6 @@ func TestTinyGoServicesReturnUnsupported(t *testing.T) {
 		{"branches", func() error { _, err := f.Branches().List(ctx, "group", "project", forge.ListBranchOpts{}); return err }},
 		{"deploy keys", func() error { _, err := f.DeployKeys().Get(ctx, "group", "project", 12); return err }},
 		{"webhooks", func() error { _, err := f.Webhooks().Get(ctx, "group", "project", 12); return err }},
-		{"webhook events", func() error {
-			_, err := f.Webhooks().ParseEvent(&http.Request{Header: http.Header{}}, "")
-			return err
-		}},
-		{"parse webhook", func() error {
-			_, err := gitlab.ParseWebhook(&http.Request{Header: http.Header{}}, "")
-			return err
-		}},
 		{"secrets", func() error { _, err := f.Secrets().List(ctx, "group", "project", forge.ListSecretOpts{}); return err }},
 		{"notifications", func() error { _, err := f.Notifications().Get(ctx, "12"); return err }},
 		{"reviews", func() error {

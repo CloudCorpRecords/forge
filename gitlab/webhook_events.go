@@ -1,5 +1,3 @@
-//go:build !tinygo
-
 package gitlab
 
 import (
@@ -108,10 +106,6 @@ func ParseWebhook(r *http.Request, secret string) (*forge.WebhookEvent, error) {
 	}
 
 	return parseGitLabEvent(eventType, r.Header.Get("X-Gitlab-Event-UUID"), body)
-}
-
-func (s *gitLabWebhookService) ParseEvent(r *http.Request, secret string) (*forge.WebhookEvent, error) {
-	return ParseWebhook(r, secret)
 }
 
 func parseGitLabEvent(eventType, deliveryID string, payload []byte) (*forge.WebhookEvent, error) {

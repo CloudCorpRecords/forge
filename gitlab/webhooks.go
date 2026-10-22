@@ -178,3 +178,7 @@ func (s *gitLabWebhookService) Delete(ctx context.Context, owner, repo string, i
 	}
 	return nil
 }
+
+func (s *gitLabWebhookService) ParseEvent(r *http.Request, secret string) (*forge.WebhookEvent, error) {
+	return ParseWebhook(r, secret)
+}

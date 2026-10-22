@@ -137,6 +137,59 @@ func TestGiteaParseWebhookFormSignsPayload(t *testing.T) {
 	}
 }
 
+func TestGiteaParseWebhookGet(t *testing.T) {
+	payload := `{"ref": "refs/heads/main", "before": "a", "after": "b"}`
+
+	// Gitea builds GET deliveries by adding the payload to the hook URL's
+	// existing query and signs the same JSON it sends in POST bodies.
+	newGetRequest := func(query url.Values, signature string) *http.Request {
+		r := httptest.NewRequest(http.MethodGet, "/hook?"+query.Encode(), nil)
+		r.Header.Set("X-Gitea-Event", "push")
+		r.Header.Set("X-Gitea-Delivery", "delivery-1")
+		if signature != "" {
+			r.Header.Set("X-Gitea-Signature", signature)
+		}
+		return r
+	}
+	withPayload := url.Values{"token": {"abc"}, "payload": {payload}}
+
+	t.Run("signed", func(t *testing.T) {
+		event, err := ParseWebhook(newGetRequest(withPayload, signGiteaPayload(payload)), testWebhookSecret)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		assertEqual(t, "Type", "push", event.Type)
+		assertEqual(t, "DeliveryID", "delivery-1", event.DeliveryID)
+		if event.Push == nil || event.Push.Ref != "refs/heads/main" {
+			t.Fatalf("Push = %+v", event.Push)
+		}
+		if string(event.Payload) != payload {
+			t.Errorf("Payload = %q, want %q", event.Payload, payload)
+		}
+	})
+
+	t.Run("wrong signature", func(t *testing.T) {
+		_, err := ParseWebhook(newGetRequest(withPayload, signGiteaPayload(`{}`)), testWebhookSecret)
+		if !errors.Is(err, forge.ErrInvalidWebhookSignature) {
+			t.Fatalf("expected ErrInvalidWebhookSignature, got %v", err)
+		}
+	})
+
+	t.Run("missing signature", func(t *testing.T) {
+		_, err := ParseWebhook(newGetRequest(withPayload, ""), testWebhookSecret)
+		if !errors.Is(err, forge.ErrInvalidWebhookSignature) {
+			t.Fatalf("expected ErrInvalidWebhookSignature, got %v", err)
+		}
+	})
+
+	t.Run("missing payload", func(t *testing.T) {
+		_, err := ParseWebhook(newGetRequest(url.Values{"token": {"abc"}}, signGiteaPayload(payload)), testWebhookSecret)
+		if err == nil {
+			t.Fatal("expected error for missing payload, got nil")
+		}
+	})
+}
+
 func TestGiteaParseWebhookPrefersForgejoHeaders(t *testing.T) {
 	payload := `{"action": "created"}`
 	r := newGiteaWebhookRequest("push", payload)

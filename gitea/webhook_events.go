@@ -31,15 +31,10 @@ var giteaActions = map[string]string{
 
 // ParseWebhook verifies and parses a Gitea or Forgejo webhook delivery. When
 // secret is non-empty the X-Forgejo-Signature or X-Gitea-Signature header must
-// match the JSON payload, which is what both servers sign even for form
-// deliveries.
+// match the JSON payload, which is what both servers sign whether it arrives as
+// a JSON body, a form body or a GET query parameter.
 func ParseWebhook(r *http.Request, secret string) (*forge.WebhookEvent, error) {
-	body, err := hookutil.ReadBody(r)
-	if err != nil {
-		return nil, fmt.Errorf("gitea: %w", err)
-	}
-
-	payload, err := hookutil.Payload(r.Header.Get("Content-Type"), body)
+	payload, err := giteaPayload(r)
 	if err != nil {
 		return nil, fmt.Errorf("gitea: %w", err)
 	}
@@ -58,6 +53,24 @@ func ParseWebhook(r *http.Request, secret string) (*forge.WebhookEvent, error) {
 	deliveryID := hookutil.FirstHeader(r, "X-Forgejo-Delivery", "X-Gitea-Delivery", "X-Gogs-Delivery")
 
 	return parseGiteaEvent(eventType, deliveryID, payload)
+}
+
+// giteaPayload returns the JSON payload of a delivery. Hooks configured to use
+// GET send it in the payload query parameter with no body.
+func giteaPayload(r *http.Request) ([]byte, error) {
+	if r.Method == http.MethodGet {
+		payload := r.URL.Query().Get("payload")
+		if payload == "" {
+			return nil, errors.New("webhook GET request has no payload query parameter")
+		}
+		return []byte(payload), nil
+	}
+
+	body, err := hookutil.ReadBody(r)
+	if err != nil {
+		return nil, err
+	}
+	return hookutil.Payload(r.Header.Get("Content-Type"), body)
 }
 
 func (s *giteaWebhookService) ParseEvent(r *http.Request, secret string) (*forge.WebhookEvent, error) {
