@@ -24,6 +24,7 @@ func (f *giteaForge) Releases() forge.ReleaseService {
 
 func convertGiteaRelease(r *gitea.Release) forge.Release {
 	result := forge.Release{
+		ID:          r.ID,
 		TagName:     r.TagName,
 		Title:       r.Title,
 		Body:        r.Note,

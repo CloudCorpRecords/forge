@@ -8,6 +8,8 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"code.gitea.io/sdk/gitea"
 )
 
 func TestCreateReleaseAlreadyExists(t *testing.T) {
@@ -122,5 +124,20 @@ func TestCreateReleaseNotFound(t *testing.T) {
 	})
 	if !errors.Is(err, forge.ErrNotFound) {
 		t.Fatalf("expected ErrNotFound, got %v", err)
+	}
+}
+
+func TestConvertGiteaReleasePopulatesID(t *testing.T) {
+	rel := convertGiteaRelease(&gitea.Release{
+		ID:      777,
+		TagName: "v7.7.7",
+		Title:   "Release 7.7.7",
+		IsDraft: true,
+	})
+	if rel.ID != 777 {
+		t.Errorf("ID: want 777, got %d", rel.ID)
+	}
+	if rel.TagName != "v7.7.7" {
+		t.Errorf("TagName: want %q, got %q", "v7.7.7", rel.TagName)
 	}
 }
