@@ -102,11 +102,7 @@ func (s *gitHubReleaseService) List(ctx context.Context, owner, repo string, opt
 	return all, nil
 }
 
-// getReleaseByTagOrID resolves a release by tag, falling back to a numeric
-// release ID when the tag lookup returns 404. Draft releases cannot be
-// reached by tag on GitHub, so passing the release ID lets callers target
-// drafts. The ID path only fires after a tag 404, so existing numeric tags
-// keep resolving by tag exactly as before.
+// Draft releases 404 by tag on GitHub, so fall back to treating tag as a release ID.
 func (s *gitHubReleaseService) getReleaseByTagOrID(ctx context.Context, owner, repo, tag string) (*github.RepositoryRelease, error) {
 	r, resp, err := s.client.Repositories.GetReleaseByTag(ctx, owner, repo, tag)
 	if err == nil {

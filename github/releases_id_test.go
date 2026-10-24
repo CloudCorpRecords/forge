@@ -13,12 +13,6 @@ import (
 	"github.com/google/go-github/v82/github"
 )
 
-// Draft releases cannot be resolved by tag: GitHub's
-// GET /repos/{owner}/{repo}/releases/tags/{tag} 404s for drafts.
-// These tests pin the fallback to the numeric release ID.
-
-// TestGitHubReleaseGetByIDFallback stubs a draft release that 404s by tag
-// but resolves by ID, then asserts Get returns it with its ID populated.
 func TestGitHubReleaseGetByIDFallback(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /api/v3/repos/octocat/hello/releases/tags/9", func(w http.ResponseWriter, r *http.Request) {
@@ -50,9 +44,6 @@ func TestGitHubReleaseGetByIDFallback(t *testing.T) {
 	assertEqualInt64(t, "ID", 9, rel.ID)
 }
 
-// TestGitHubReleaseUploadAssetByIDFallback covers the reported bug directly:
-// `release upload <id> <file>` must reach a draft release even though the
-// tag lookup 404s.
 func TestGitHubReleaseUploadAssetByIDFallback(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /api/v3/repos/octocat/hello/releases/tags/9", func(w http.ResponseWriter, r *http.Request) {
@@ -63,8 +54,7 @@ func TestGitHubReleaseUploadAssetByIDFallback(t *testing.T) {
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = fmt.Fprint(w, `{"id": 9, "tag_name": "v0.9.0-draft", "draft": true}`)
 	})
-	// Note: go-github posts asset uploads to <base>/api/uploads/... on
-	// enterprise URL configurations, so the stub must match that path.
+	// go-github posts uploads to <base>/api/uploads/... on enterprise URLs, so the stub must match that path.
 	mux.HandleFunc("POST /api/v3/api/uploads/repos/octocat/hello/releases/9/assets", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
@@ -99,8 +89,6 @@ func TestGitHubReleaseUploadAssetByIDFallback(t *testing.T) {
 	assertEqualInt(t, "Asset.Size", 11, asset.Size)
 }
 
-// TestGitHubReleaseUpdateByIDFallback pins that Update also resolves drafts
-// through the ID path.
 func TestGitHubReleaseUpdateByIDFallback(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /api/v3/repos/octocat/hello/releases/tags/9", func(w http.ResponseWriter, r *http.Request) {
@@ -130,8 +118,6 @@ func TestGitHubReleaseUpdateByIDFallback(t *testing.T) {
 	assertEqual(t, "Title", "Draft 9 renamed", rel.Title)
 }
 
-// TestGitHubReleaseDeleteByIDFallback pins that Delete also resolves drafts
-// through the ID path.
 func TestGitHubReleaseDeleteByIDFallback(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /api/v3/repos/octocat/hello/releases/tags/9", func(w http.ResponseWriter, r *http.Request) {
@@ -155,9 +141,6 @@ func TestGitHubReleaseDeleteByIDFallback(t *testing.T) {
 	}
 }
 
-// TestGitHubReleaseGetMissingTagNotFound pins that a tag that is neither a
-// real tag nor a resolvable release ID still returns forge.ErrNotFound, both
-// for non-numeric and for numeric-but-absent values.
 func TestGitHubReleaseGetMissingTagNotFound(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /api/v3/repos/octocat/hello/releases/tags/nope", func(w http.ResponseWriter, r *http.Request) {
@@ -185,8 +168,6 @@ func TestGitHubReleaseGetMissingTagNotFound(t *testing.T) {
 	}
 }
 
-// TestConvertGitHubReleasePopulatesID pins that the converter carries the
-// release ID into forge.Release so callers can see it in list/view output.
 func TestConvertGitHubReleasePopulatesID(t *testing.T) {
 	rel := convertGitHubRelease(&github.RepositoryRelease{
 		ID:      ptrInt64(12345),
